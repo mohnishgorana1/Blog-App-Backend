@@ -25,7 +25,7 @@ app.use(compression()); // Enable compression
 
 // Routes 
 app.use("/api/v1/users", userRoutes)
-app.use("/api/v1/blog", blogRoutes)
+app.use("/api/v1/blogs", blogRoutes)
 
 // test route
 app.get("/", (req: Request, res: Response) => {

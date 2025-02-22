@@ -13,7 +13,8 @@ export interface IBlog extends Document {
   updatedAt: Date;
 }
 
-export interface IComment {
+export interface IComment extends Document {
+  blog: mongoose.Schema.Types.ObjectId;
   user: mongoose.Schema.Types.ObjectId;
   text: string;
   replies: IReply[];
@@ -26,41 +27,43 @@ export interface IReply {
   createdAt: Date;
 }
 
-const CommentSchema = new Schema<IComment>(
+const ReplySchema = new Schema<IReply>(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     text: { type: String, required: true },
-    replies: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        text: { type: String, required: true },
-        createdAt: { type: Date, default: Date.now },
-      },
-    ],
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  { _id: true } // Ensures replies have unique IDs
 );
 
+const CommentSchema = new Schema<IComment>(
+  {
+    blog: { type: mongoose.Schema.Types.ObjectId, ref: "Blog", required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    text: { type: String, required: true },
+    replies: [ReplySchema], // Replies inside comment
+    createdAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
 
 const BlogSchema = new Schema<IBlog>(
-    {
-      title: { type: String, required: true, trim: true },
-      content: { type: String, required: true },
-      author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-      category: { type: String, required: true },
-      tags: { type: [String], default: [] },
-      likes: { type: Number, default: 0 },
-      views: { type: Number, default: 0 },
-      comments: { type: [CommentSchema], default: [] },
+  {
+    title: { type: String, required: true, trim: true },
+    content: { type: String, required: true },
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    { timestamps: true }
-  );
-  
+    category: { type: String, required: true },
+    tags: { type: [String], default: [] },
+    likes: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
+    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }], // Now referencing Comment model
+  },
+  { timestamps: true }
+);
 
-
-export default mongoose.model<IBlog>("Blog", BlogSchema);
+export const Comment = mongoose.model<IComment>("Comment", CommentSchema);
+export const Blog = mongoose.model<IBlog>("Blog", BlogSchema);
